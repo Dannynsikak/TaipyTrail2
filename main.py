@@ -25,6 +25,22 @@ company_names = company_data[["Symbol","Shortname"]][
 # placeholder prediction values
 lin_pred, knn_pred, rnn_pred = 150, 152, 149
 
+with tgb.Page() as page:
+    # Page header 
+    tgb.text("# S&P 500 Stock Value Exploation", mode="md", class_name="text-center")
+
+    # Date range selelctor (for future use)
+    tgb.date_range("{dates}", label_start="Start Date", labe_end="End Date")
+
+    # Country and company selectors 
+    with tgb.layout(columns="1 3"):
+        # Country selector 
+        tgb.selector(
+            label="Country",
+            value="{country}",
+            lov=[("USA", "USA"), ("Canada", "Canada"), ("UK", "UK")]
+        )
+
 dates = [
     datetime.date(2024, 1, 1),
     datetime.date(2024, 12, 31)
