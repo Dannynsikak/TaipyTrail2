@@ -42,6 +42,14 @@ with tgb.Page() as page:
             dropdown=True,
             value_by_id=True
         )
+        # Company selector
+        tgb.selector(
+            label="Company",
+            value="{company}",
+            lov="{company_names}",
+            dropdown=True,
+            value_by_id=True
+        )
 
     # Predictions display
     with tgb.layout(columns="1 1 1"):
@@ -53,7 +61,7 @@ def filter_company_names(country):
     """
     Filter company names based on the selected country
     """
-    return company_data[["Symbol", "SHortname"]][
+    return company_data[["Symbol", "Shortname"]][
         company_data["Country"] == country
     ].sort_values("Shortname").values.tolist()
 
