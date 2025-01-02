@@ -38,8 +38,52 @@ with tgb.Page() as page:
         tgb.selector(
             label="Country",
             value="{country}",
-            lov=[("USA", "USA"), ("Canada", "Canada"), ("UK", "UK")]
+            lov=[("USA", "USA"), ("Canada", "Canada"), ("UK", "UK")],
+            dropdown=True,
+            value_by_id=True
         )
+
+    # Predictions display
+    with tgb.layout(columns="1 1 1"):
+        tgb.text("Linear Prediction: {lin_pred}", class_name="metric-box")
+        tgb.text("KNN Prediction: {knn_pred}", class_name="metric-box")
+        tgb.text("RNN Prediction: {rnn_pred}", class_name="metric-box")
+
+def filter_company_names(country):
+    """
+    Filter company names based on the selected country
+    """
+    return company_data[["Symbol", "SHortname"]][
+        company_data["Country"] == country
+    ].sort_values("Shortname").values.tolist()
+
+# Data Nodes for country and company names 
+country_cfg = Config.configure_data_node(id="country", default_data=country)
+company_names_cfg = Config.configure_data_node(id="company_names", default_data=company_names)
+
+filter_companies_task_cfg = Config.configure_task(
+    id="filter_companies_task",
+    function=filter_company_names,
+    input=country_cfg,
+    output=company_names_cfg
+)
+
+scenario_cfg = Config.configure_scenario(
+    id="country_company_scenario",
+    task_configs=[filter_companies_task_cfg]
+)
+
+def on_change(state, name, value):
+    if name == "country":
+        print(f"{name} was modified to {value}")
+        # Update the country data node in the scenario
+        state.scenario.country.write(value)
+        # Submit the scenario to execute the task
+        state.scenario.submit(wait=True)
+        # Read the updated company names and update the state
+        state.company_names = state.scenario.company_names.read()
+    if name == "country":
+        print(f"{name} was modified to {value}")
 
 dates = [
     datetime.date(2024, 1, 1),
@@ -48,9 +92,11 @@ dates = [
 
 if __name__ == "__main__":
     # Run the orchestrator
-
+    tp.Orchestrator().run()
     # Initialize scenario
-
+    scenario = tp.create_scenario(scenario_cfg)
+    # Write the default country to the scenario
+    scenario.country.write(country)
     # Run the GUI
     gui = tp.Gui(page)
     gui.run(title="S&P 500 Stock Explorer")
